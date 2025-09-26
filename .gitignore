@@ -43,11 +43,13 @@ float/
 *.db
 *.nc
 *.parquet
-*.index
 data_raw/
 data_processed/
-vector_store/
 downloaded_files.txt
+
+# Include vector store files
+!vector_store/
+!vector_store/*.*
 
 # Large files
 *.zip
