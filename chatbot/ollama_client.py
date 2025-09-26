@@ -5,7 +5,7 @@ import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 from datetime import datetime
-import requests
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -13,8 +13,11 @@ load_dotenv()
 
 # Constants
 VECTOR_STORE_DIR = os.getenv("VECTOR_STORE_DIR", "vector_store")
-OLLAMA_API = os.getenv("OLLAMA_API", "http://localhost:11434/api/generate")
-MODEL = os.getenv("OLLAMA_MODEL", "mistral")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Configure Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-pro')
 
 class FloatChatbot:
     def __init__(self):
@@ -56,7 +59,7 @@ class FloatChatbot:
         return results
 
     def generate_response(self, query, context):
-        """Generate a response using Ollama"""
+        """Generate a response using Google's Gemini"""
         prompt = f"""You are an expert oceanographer, helping to analyze float profile data from the ocean.
 Use the following context from relevant float profiles to answer the question.
 
@@ -74,23 +77,18 @@ Remember:
 Answer:"""
 
         try:
-            # Call Ollama API
-            response = requests.post(OLLAMA_API, json={
-                "model": MODEL,
-                "prompt": prompt,
-                "stream": False
-            }, timeout=30)
+            if not GEMINI_API_KEY:
+                return "Error: GEMINI_API_KEY environment variable is not set"
+                
+            # Call Gemini API
+            response = model.generate_content(prompt)
             
-            if response.status_code == 200:
-                return response.json()['response']
+            if response.parts:
+                return response.text
             else:
-                error_msg = f"API Error (Status {response.status_code}): {response.text}"
-                print(f"Error calling Ollama API: {error_msg}")
+                error_msg = "No response generated"
+                print(f"Error calling Gemini API: {error_msg}")
                 return f"Sorry, I encountered an error: {error_msg}"
-        except requests.exceptions.ConnectionError as e:
-            error_msg = f"Connection Error: Could not connect to {OLLAMA_API}. Please ensure the API is accessible."
-            print(f"Connection Error: {str(e)}")
-            return error_msg
         except Exception as e:
             error_msg = f"Unexpected error: {str(e)}"
             print(f"Error generating response: {error_msg}")
