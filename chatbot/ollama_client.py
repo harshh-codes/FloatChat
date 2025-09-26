@@ -17,7 +17,14 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+generation_config = genai.types.GenerationConfig(
+    temperature=0.7,
+    candidate_count=1,
+    stop_sequences=None,
+    max_output_tokens=2048,
+)
+model = genai.GenerativeModel('models/gemini-2.0-flash',
+                            generation_config=generation_config)
 
 class FloatChatbot:
     def __init__(self):
@@ -83,8 +90,10 @@ Answer:"""
             # Call Gemini API
             response = model.generate_content(prompt)
             
-            if response.parts:
+            if hasattr(response, 'text'):
                 return response.text
+            elif hasattr(response, 'candidates') and response.candidates:
+                return response.candidates[0].content.text
             else:
                 error_msg = "No response generated"
                 print(f"Error calling Gemini API: {error_msg}")
