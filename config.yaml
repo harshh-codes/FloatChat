@@ -1,0 +1,16 @@
+data:
+  raw_dir: ./data_raw
+  processed_dir: ./data_processed
+  parquet_dir: ./data_processed/parquet
+
+db:
+  sqlite_path: ./database/argo_meta.db
+  faiss_index: ./database/faiss_index.bin
+
+models:
+  embedding_model: all-MiniLM-L6-v2
+  ollama_model: phi4-mini-reasoning
+  ollama_url: http://localhost:11434/api/generate
+
+ingestion:
+  chunk_seconds: 3600  # if you chunk by time; optional
